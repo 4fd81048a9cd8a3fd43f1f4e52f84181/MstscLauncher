@@ -12,22 +12,19 @@ namespace MstscLauncher
     static class Program
     {
         [STAThread]
-        static void Main(string[] args)
+        static int Main(string[] args)
         {
-            try
-            {
                 var mstsc = Environment.ExpandEnvironmentVariables(@"%SystemRoot%\System32\mstsc.exe");
 
                 if (File.Exists(mstsc) == false)
                 {
-                    MessageBox.Show($"{mstsc} was not found", "File not found", MessageBoxButtons.OK, MessageBoxIcon.Error);
-                    return;
+                    // MessageBox.Show($"{mstsc} was not found", "File not found", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                    return 1;
                 }
 
                 if (args.Length == 0)
                 {
-                    SetupProtocolHandelingInRegistry();
-                    return;
+                    return SetupProtocolHandelingInRegistry();
                 }
 
                 Uri uri = new Uri(args[0]);
@@ -67,17 +64,18 @@ namespace MstscLauncher
                         }
 
                         Execute(mstsc, arguments);
+                        return 0;
                     }
                     else
                     {
                         Execute(mstsc, host);
+                        return 0;
                     }
                 }
-            }
-            catch (Exception ex)
-            {
-                MessageBox.Show(ex.Message, "Mstsc Launcher - Fatal error", MessageBoxButtons.OK, MessageBoxIcon.Error);
-            }
+                else
+                {
+                    return 2;
+                }
         }
 
         static void Execute(string exe, params string[] args)
@@ -102,7 +100,7 @@ namespace MstscLauncher
             p.Start();
         }
 
-        static void SetupProtocolHandelingInRegistry()
+        static int SetupProtocolHandelingInRegistry()
         {
             var mstscLauncherPath = System.Reflection.Assembly.GetExecutingAssembly().Location;
 
@@ -113,11 +111,13 @@ namespace MstscLauncher
                 RegisterProtocol(hkcr, mstscLauncherPath, "mstsc");
                 RegisterProtocol(hkcr, mstscLauncherPath, "rdp");
 
-                MessageBox.Show("URL handler registered", "Mstsc Launcher", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                // MessageBox.Show("URL handler registered", "Mstsc Launcher", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                return 0;
             }
             catch (UnauthorizedAccessException)
             {
-                MessageBox.Show("Could not register as URL handler, please run again as administrator", "Mstsc Launcher", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                // MessageBox.Show("Could not register as URL handler, please run again as administrator", "Mstsc Launcher", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                return 3;
             }
         }
 
